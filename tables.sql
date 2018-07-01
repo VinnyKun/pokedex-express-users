@@ -6,11 +6,12 @@ CREATE TABLE IF NOT EXISTS pokemon (
   img varchar(255),
   weight varchar(255),
   height varchar(255),
-  user_id integer
+  user_id varchar(255)
 );
 
 -- create user table in database
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
-  user_name varchar(255)
+  email varchar(255),
+  password_hash varchar(255)
 );

@@ -11,6 +11,8 @@
 const express = require('express');
 const methodOverride = require('method-override');
 const pg = require('pg');
+const sha256 = require('js-sha256');
+const cookieParser = require('cookie-parser');
 
 // Initialise postgres client
 const config = {
@@ -41,6 +43,7 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
+app.use(cookieParser());
 
 
 // Set react-views to be the default view engine
@@ -117,14 +120,16 @@ const getPokemon = (request, response) => {
 */
 
 const getNew = (request, response) => {
-  response.render('new');
+  response.render('New');
 }
 
 const postPokemon = (request, response) => {
-  let params = request.body;
+  let pokemon = request.body;
+
+  let id = request.cookies['user_id'];
   
-  const queryString = 'INSERT INTO pokemon(name, height) VALUES($1, $2);';
-  const values = [params.name, params.height];
+  const queryString = 'INSERT INTO pokemon(num, name, img, height, weight, user_id) VALUES($1, $2, $3, $4, $5, $6);';
+  const values = [pokemon.num, pokemon.name, pokemon.img, pokemon.height, pokemon.weight, id];
 
   pool.query(queryString, values, (err, result) => {
     if (err) {
@@ -136,6 +141,93 @@ const postPokemon = (request, response) => {
       response.redirect('/');
     }
   });
+};
+
+/*
+    *************************************************************
+    *************************************************************
+                    New User
+    *************************************************************
+    *************************************************************
+
+*/
+
+const newUser = (request, response) => {
+  response.render('NewUser');
+}
+
+const postUser = (request, response) => {
+  let user = request.body;
+  console.log(user)
+
+  let password_hash = sha256( user.password );
+  const queryString = 'INSERT INTO users(email, password_hash) VALUES($1, $2);';
+  const values = [user.email, password_hash];
+
+  pool.query(queryString, values, (err, result) => {
+    if (err) {
+      console.log('query error:', err.stack);
+    } else {
+      console.log('query result user create:', result);
+
+
+      response.cookie('logged_in', 'true');
+      response.cookie('user_id', result.rows[0].id);
+      response.send('Logged in!');
+    }
+  });
+};
+
+/*
+    *************************************************************
+    *************************************************************
+                    User login
+    *************************************************************
+    *************************************************************
+
+*/
+
+const currentUser = (request, response) => {
+  response.render('userLogin');
+}
+
+const postUserLogin = (request, response) => {
+  let user = request.body;
+
+  var password_hash = sha256( user.password );
+  const queryString = 'SELECT * FROM users(email) VALUES($1);';
+  const values = [user.email];
+
+  pool.query(queryString, values, (err, result) => {
+    if (err) {
+      console.log('query error:', err.stack);
+    }else {
+      console.log('query result user create:', result);
+      const queryRows = result.rows;
+
+      if(result.rows.length < 1){
+        response.send(401);
+      }else{
+
+        if( result.rows[0].password ===  password_hash ){
+
+            response.cookie('logged_in', 'true');
+            response.cookie('user_id', result.rows[0].id);
+            response.send("Welcome "+ result.rows[0].email);
+        }else{
+            response.status(401).send('wrong password!');
+
+        }
+      }
+    
+    }
+  });
+};
+
+const userLogout = (request, response) => {
+  response.clearCookie('user_id');
+  response.clearCookie('logged_in');
+  response.send('users logged out!');
 };
 
 /*
@@ -205,6 +297,7 @@ const deletePokemon = (request, response) => {
   });
 }
 
+
 // const deletePokemonForm = (request, response) => {
 //   response.send("COMPLETE ME");
 // }
@@ -220,22 +313,26 @@ app.get('/pokemon/:id/edit', editPokemonForm);
 app.get('/pokemon/new', getNew);
 app.get('/pokemon/:id', getPokemon);
 //app.get('/pokemon/:id/delete', deletePokemonForm);
-
 app.post('/pokemon', postPokemon);
-
 app.put('/pokemon/:id', updatePokemon);
-
 app.delete('/pokemon/:id', deletePokemon);
 
 // TODO: New routes for creating users
+app.get('/user/new', newUser);
+app.post('/user', postUser);
+
+//current user
+app.get('/user/login', currentUser);
+app.post('/user/login', postUserLogin);
 
 
+app.get('/user/logout', userLogout);
 /**
  * ===================================
  * Listen to requests on port 3000
  * ===================================
  */
-const server = app.listen(3000, () => console.log('~~~ Ahoy we go from the port of 3000!!!'));
+const server = app.listen(3001, () => console.log('~~~ Ahoy we go from the port of 3000!!!'));
 
 
 

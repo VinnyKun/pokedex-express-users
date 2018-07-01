@@ -91,7 +91,7 @@ class Edit extends React.Component {
 
           <form
             className="pokemon-delete" method="POST"
-            action={"/pokemons/"+ this.props.pokemon.id + "?_method=delete"}
+            action={"/pokemon/"+ this.props.pokemon.id + "?_method=delete"}
           >
           <input value="DELETE ME PLEASE!" type="submit"/>
 

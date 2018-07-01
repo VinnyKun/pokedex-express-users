@@ -13,6 +13,8 @@ This is a clean new app without a `seed.sql` file. So you'll need at least 2 use
 5.  Look in the starter file called `index.js`, run `nodemon` to start local server on port 3000
 6.  Open `localhost:3000` on your browser and see the home page
 
+psql -U hi -d pokemons -a -f tables.sql
+
 ## Deliverables
 
 The deliverable is an app that has CRUD functionality on pokemons that can be associated with users. Some example code from the previous version of the exercise has been provided for you to build on, although you may extend your own code from the previous exercise if you wish to do so.
