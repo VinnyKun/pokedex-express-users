@@ -14,7 +14,7 @@ const pg = require('pg');
 
 // Initialise postgres client
 const config = {
-  user: 'ck',
+  user: 'hi',
   host: '127.0.0.1',
   database: 'pokemons',
   port: 5432,
@@ -55,6 +55,15 @@ app.engine('jsx', reactEngine);
  * ===================================
  */
 
+  /*
+    *************************************************************
+    *************************************************************
+                    All Pokemon Homepage
+    *************************************************************
+    *************************************************************
+
+*/
+
  const getRoot = (request, response) => {
   // query database for all pokemon
 
@@ -73,9 +82,15 @@ app.engine('jsx', reactEngine);
   });
 }
 
-const getNew = (request, response) => {
-  response.render('new');
-}
+/*
+    *************************************************************
+    *************************************************************
+                    Search Pokemon
+    *************************************************************
+    *************************************************************
+
+*/
+
 
 const getPokemon = (request, response) => {
   let id = request.params['id'];
@@ -90,6 +105,19 @@ const getPokemon = (request, response) => {
       response.render( 'pokemon', {pokemon: result.rows[0]} );
     }
   });
+}
+
+/*
+    *************************************************************
+    *************************************************************
+                    New Pokemon
+    *************************************************************
+    *************************************************************
+
+*/
+
+const getNew = (request, response) => {
+  response.render('new');
 }
 
 const postPokemon = (request, response) => {
@@ -109,6 +137,15 @@ const postPokemon = (request, response) => {
     }
   });
 };
+
+/*
+    *************************************************************
+    *************************************************************
+                    Edit Pokemon
+    *************************************************************
+    *************************************************************
+
+*/
 
 const editPokemonForm = (request, response) => {
   let id = request.params['id'];
@@ -143,13 +180,34 @@ const updatePokemon = (request, response) => {
   });
 }
 
-const deletePokemonForm = (request, response) => {
-  response.send("COMPLETE ME");
-}
+/*
+    *************************************************************
+    *************************************************************
+                    Delete Pokemon
+    *************************************************************
+    *************************************************************
+
+*/
 
 const deletePokemon = (request, response) => {
-  response.send("COMPLETE ME");
+  const queryString = 'DELETE from pokemon WHERE id =' + request.params.id;
+
+  console.log(queryString);
+  pool.query(queryString, (err, res) => {
+    if (err) {
+      console.log('query error 5', err.stack);
+    } else {
+      console.log('query result:', res);
+
+      // redirect to home page
+      response.redirect('/');
+    }
+  });
 }
+
+// const deletePokemonForm = (request, response) => {
+//   response.send("COMPLETE ME");
+// }
 /**
  * ===================================
  * Routes
@@ -161,7 +219,7 @@ app.get('/', getRoot);
 app.get('/pokemon/:id/edit', editPokemonForm);
 app.get('/pokemon/new', getNew);
 app.get('/pokemon/:id', getPokemon);
-app.get('/pokemon/:id/delete', deletePokemonForm);
+//app.get('/pokemon/:id/delete', deletePokemonForm);
 
 app.post('/pokemon', postPokemon);
 
